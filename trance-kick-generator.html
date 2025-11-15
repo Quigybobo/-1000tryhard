@@ -117,6 +117,17 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
+        .grid-cell.playing {
+            animation: pulse 0.15s ease-in-out;
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.8);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1.1); }
+        }
+
         .beat-numbers {
             display: grid;
             grid-template-columns: repeat(16, 1fr);
@@ -157,6 +168,20 @@
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
+        .btn-preview {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-preview.playing {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+
         .btn-download {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
@@ -194,12 +219,25 @@
         .info li {
             margin: 5px 0;
         }
+
+        .audio-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .audio-notice strong {
+            color: #856404;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎵 Trance Kick Generator</h1>
-        <p class="subtitle">Create professional trance kick patterns • Export to MIDI • Use in Ableton</p>
+        <p class="subtitle">Create • Preview • Export to MIDI • Use in Ableton</p>
 
         <div class="controls">
             <div class="control-group">
@@ -240,7 +278,12 @@
 
         <div class="buttons">
             <button class="btn-generate" onclick="generatePattern()">🎲 Generate Pattern</button>
+            <button class="btn-preview" id="previewBtn" onclick="togglePreview()">▶️ Preview Sound</button>
             <button class="btn-download" id="downloadBtn" onclick="downloadMIDI()" disabled>⬇️ Download MIDI</button>
+        </div>
+
+        <div class="audio-notice">
+            <strong>🔊 Audio Preview:</strong> Click "Preview Sound" to hear your pattern in the browser! The synthesized kick is just a preview - your exported MIDI will sound much better with real kick samples in Ableton.
         </div>
 
         <div class="info">
@@ -250,6 +293,7 @@
                 <li>🎨 Choose a pattern style that fits your track</li>
                 <li>🎲 Click "Generate Pattern" to create the beat</li>
                 <li>👆 Click individual cells to toggle kicks on/off</li>
+                <li>▶️ Click "Preview Sound" to HEAR your pattern!</li>
                 <li>⬇️ Download MIDI file and drag into Ableton Live</li>
                 <li>🥁 Assign to Impulse or Simpler with your kick sample</li>
             </ul>
@@ -259,6 +303,170 @@
     <script>
         let currentPattern = [];
         let currentBPM = 138;
+        let audioContext = null;
+        let isPlaying = false;
+        let scheduledNotes = [];
+        let currentStep = 0;
+        let nextNoteTime = 0;
+        let lookahead = 25.0; // milliseconds
+        let scheduleAheadTime = 0.1; // seconds
+        let timerID = null;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Create synthesized kick drum sound
+        function playKick(time, velocity) {
+            if (!audioContext) return;
+
+            // Oscillator for the punch (body)
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, time);
+            osc.frequency.exponentialRampToValueAtTime(40, time + 0.5);
+
+            oscGain.gain.setValueAtTime(velocity / 127, time);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+
+            osc.start(time);
+            osc.stop(time + 0.5);
+
+            // Add some noise for the attack
+            const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBuffer.length; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioContext.createBufferSource();
+            const noiseGain = audioContext.createGain();
+            const noiseFilter = audioContext.createBiquadFilter();
+
+            noise.buffer = noiseBuffer;
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(1000, time);
+            noiseFilter.frequency.exponentialRampToValueAtTime(100, time + 0.05);
+
+            noiseGain.gain.setValueAtTime(velocity / 255, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+
+            noise.start(time);
+            noise.stop(time + 0.05);
+        }
+
+        // Scheduler for precise timing
+        function scheduler() {
+            while (nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+                scheduleNote(currentStep, nextNoteTime);
+                nextStep();
+            }
+            timerID = setTimeout(scheduler, lookahead);
+        }
+
+        function scheduleNote(beatNumber, time) {
+            if (currentPattern[beatNumber]) {
+                const velocity = (beatNumber % 4 === 0) ? 127 : 100;
+                playKick(time, velocity);
+
+                // Schedule visual feedback
+                scheduledNotes.push({
+                    note: beatNumber,
+                    time: time
+                });
+            }
+        }
+
+        function nextStep() {
+            const secondsPerBeat = 60.0 / currentBPM;
+            const secondsPer16th = secondsPerBeat / 4;
+
+            nextNoteTime += secondsPer16th;
+            currentStep++;
+
+            if (currentStep >= 16) {
+                currentStep = 0;
+            }
+        }
+
+        // Visual feedback during playback
+        function updateVisualFeedback() {
+            if (!isPlaying) return;
+
+            const currentTime = audioContext.currentTime;
+
+            scheduledNotes.forEach((note, index) => {
+                if (note.time <= currentTime && !note.played) {
+                    const grid = document.getElementById('patternGrid');
+                    const cell = grid.children[note.note];
+                    if (cell.classList.contains('active')) {
+                        cell.classList.add('playing');
+                        setTimeout(() => {
+                            cell.classList.remove('playing');
+                        }, 150);
+                    }
+                    note.played = true;
+                }
+            });
+
+            // Clean up old notes
+            scheduledNotes = scheduledNotes.filter(note => !note.played);
+
+            requestAnimationFrame(updateVisualFeedback);
+        }
+
+        // Toggle preview playback
+        function togglePreview() {
+            if (!audioContext) {
+                initAudio();
+            }
+
+            if (isPlaying) {
+                stopPreview();
+            } else {
+                startPreview();
+            }
+        }
+
+        function startPreview() {
+            if (isPlaying) return;
+
+            isPlaying = true;
+            currentStep = 0;
+            nextNoteTime = audioContext.currentTime;
+            scheduledNotes = [];
+
+            scheduler();
+            updateVisualFeedback();
+
+            const btn = document.getElementById('previewBtn');
+            btn.textContent = '⏹️ Stop';
+            btn.classList.add('playing');
+        }
+
+        function stopPreview() {
+            isPlaying = false;
+            if (timerID) {
+                clearTimeout(timerID);
+                timerID = null;
+            }
+
+            const btn = document.getElementById('previewBtn');
+            btn.textContent = '▶️ Preview Sound';
+            btn.classList.remove('playing');
+        }
 
         // Initialize pattern grid
         function initGrid() {
@@ -300,12 +508,23 @@
         document.getElementById('bpm').addEventListener('input', function(e) {
             currentBPM = e.target.value;
             document.getElementById('bpmDisplay').textContent = currentBPM;
+
+            // Restart preview if playing
+            if (isPlaying) {
+                stopPreview();
+                setTimeout(startPreview, 100);
+            }
         });
 
         // Generate pattern based on style
         function generatePattern() {
             const style = document.getElementById('pattern').value;
             const complexity = document.getElementById('complexity').value;
+
+            // Stop preview if playing
+            if (isPlaying) {
+                stopPreview();
+            }
 
             currentPattern = new Array(16).fill(false);
 
