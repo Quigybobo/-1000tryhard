@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trance Bassline Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2BD2FF 0%, #667eea 50%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2BD2FF;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        select, button {
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:hover, select:focus {
+            border-color: #2BD2FF;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #2BD2FF, #667eea);
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(43, 210, 255, 0.4);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(43, 210, 255, 0.6);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-preview {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+        }
+
+        .button-preview.playing {
+            background: linear-gradient(135deg, #f5576c, #c44569);
+        }
+
+        .button-download {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .value-display {
+            text-align: center;
+            color: #2BD2FF;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        .grid-container {
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+
+        .grid-header {
+            font-weight: bold;
+            color: #2BD2FF;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .grid-wrapper {
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        .piano-roll {
+            display: grid;
+            gap: 2px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .piano-row {
+            display: grid;
+            grid-template-columns: 60px repeat(var(--steps), 30px);
+            gap: 2px;
+            align-items: center;
+        }
+
+        .note-label {
+            font-weight: bold;
+            color: #555;
+            text-align: right;
+            padding-right: 10px;
+            font-size: 0.9em;
+        }
+
+        .piano-cell {
+            width: 30px;
+            height: 25px;
+            background: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+        }
+
+        .piano-cell:hover {
+            background: #e0f7ff;
+            transform: scale(1.1);
+        }
+
+        .piano-cell.active {
+            background: linear-gradient(135deg, #2BD2FF, #667eea);
+            border-color: #2BD2FF;
+            box-shadow: 0 2px 8px rgba(43, 210, 255, 0.5);
+        }
+
+        .piano-cell.playing {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.8);
+        }
+
+        .piano-cell.accent {
+            border: 2px solid #764ba2;
+        }
+
+        .beat-markers {
+            display: grid;
+            grid-template-columns: 60px repeat(var(--steps), 30px);
+            gap: 2px;
+            margin-bottom: 5px;
+            padding: 0 10px;
+        }
+
+        .beat-marker {
+            width: 30px;
+            text-align: center;
+            font-size: 0.75em;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .bar-divider {
+            grid-column: span 2;
+            height: 2px;
+            background: #764ba2;
+            margin: 10px 0;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #2BD2FF;
+        }
+
+        .info-box h3 {
+            color: #2BD2FF;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .scale-display {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .scale-notes {
+            font-family: monospace;
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .piano-cell {
+                width: 25px;
+                height: 20px;
+            }
+
+            .piano-row {
+                grid-template-columns: 50px repeat(var(--steps), 25px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 Trance Bassline Generator</h1>
+        <p class="subtitle">Create professional bassline patterns • Scale-based melodies • Audio preview • MIDI export</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="bpm">BPM: <span id="bpmValue">138</span></label>
+                <input type="range" id="bpm" min="120" max="150" value="138" step="1">
+            </div>
+
+            <div class="control-group">
+                <label for="rootNote">Root Note</label>
+                <select id="rootNote">
+                    <option value="0">C</option>
+                    <option value="1">C# / Db</option>
+                    <option value="2">D</option>
+                    <option value="3">D# / Eb</option>
+                    <option value="4">E</option>
+                    <option value="5">F</option>
+                    <option value="6">F# / Gb</option>
+                    <option value="7">G</option>
+                    <option value="8">G# / Ab</option>
+                    <option value="9" selected>A</option>
+                    <option value="10">A# / Bb</option>
+                    <option value="11">B</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="scale">Scale Type</label>
+                <select id="scale">
+                    <option value="minor" selected>Natural Minor</option>
+                    <option value="major">Major</option>
+                    <option value="harmonic">Harmonic Minor</option>
+                    <option value="phrygian">Phrygian Dominant</option>
+                    <option value="dorian">Dorian</option>
+                    <option value="mixolydian">Mixolydian</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="style">Pattern Style</label>
+                <select id="style">
+                    <option value="rolling">Rolling Bassline</option>
+                    <option value="stabs">Trance Stabs</option>
+                    <option value="psytrance">Psytrance Rolling</option>
+                    <option value="tech">Tech Groove</option>
+                    <option value="progressive">Progressive Melodic</option>
+                    <option value="minimal">Minimal Techno</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="octave">Octave</label>
+                <select id="octave">
+                    <option value="1">C1 (Low)</option>
+                    <option value="2" selected>C2 (Mid)</option>
+                    <option value="3">C3 (High)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="bars">Pattern Length</label>
+                <select id="bars">
+                    <option value="1">1 Bar (16 steps)</option>
+                    <option value="2">2 Bars (32 steps)</option>
+                    <option value="4" selected>4 Bars (64 steps)</option>
+                    <option value="8">8 Bars (128 steps)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="scale-display">
+            <strong>Current Scale:</strong>
+            <div class="scale-notes" id="scaleDisplay">A - B - C - D - E - F - G - A</div>
+        </div>
+
+        <div class="controls" style="margin-top: 20px;">
+            <button onclick="generatePattern()">🎲 Generate Pattern</button>
+            <button class="button-preview" id="previewBtn" onclick="togglePreview()">▶️ Preview Sound</button>
+            <button class="button-download" id="downloadBtn" onclick="downloadMIDI()" disabled>💾 Download MIDI</button>
+        </div>
+
+        <div class="grid-container">
+            <div class="grid-header">🎵 Bassline Pattern (Click notes to edit)</div>
+            <div class="grid-wrapper" id="gridWrapper">
+                <!-- Piano roll will be generated here -->
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>📖 How to Use</h3>
+            <p><strong>1. Choose your key:</strong> Select root note and scale type</p>
+            <p><strong>2. Select style:</strong> Pick a bassline pattern style that fits your track</p>
+            <p><strong>3. Generate:</strong> Click "Generate Pattern" to create a bassline</p>
+            <p><strong>4. Preview:</strong> Click "Preview Sound" to hear it with synth bass</p>
+            <p><strong>5. Customize:</strong> Click notes in the grid to add/remove them</p>
+            <p><strong>6. Export:</strong> Download as MIDI and drag into Ableton Live</p>
+
+            <h3 style="margin-top: 20px;">🎼 Pattern Styles</h3>
+            <p><strong>Rolling Bassline:</strong> Constant 16th notes moving through the scale</p>
+            <p><strong>Trance Stabs:</strong> Classic trance chords and sustained notes</p>
+            <p><strong>Psytrance Rolling:</strong> Fast, repetitive, hypnotic patterns</p>
+            <p><strong>Tech Groove:</strong> Minimal, syncopated, groovy basslines</p>
+            <p><strong>Progressive Melodic:</strong> Evolving melodic phrases</p>
+            <p><strong>Minimal Techno:</strong> Sparse, repetitive, deep bass patterns</p>
+        </div>
+    </div>
+
+    <script>
+        // Musical constants
+        const SCALES = {
+            major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10],
+            harmonic: [0, 2, 3, 5, 7, 8, 11],
+            phrygian: [0, 1, 4, 5, 7, 8, 10],
+            dorian: [0, 2, 3, 5, 7, 9, 10],
+            mixolydian: [0, 2, 4, 5, 7, 9, 10]
+        };
+
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        // State
+        let pattern = []; // Array of {step, note} objects
+        let isPlaying = false;
+        let audioContext;
+        let schedulerTimer;
+        let nextNoteTime = 0;
+        let currentStep = -1;
+
+        // UI elements
+        const bpmSlider = document.getElementById('bpm');
+        const bpmValue = document.getElementById('bpmValue');
+        const rootNoteSelect = document.getElementById('rootNote');
+        const scaleSelect = document.getElementById('scale');
+        const styleSelect = document.getElementById('style');
+        const octaveSelect = document.getElementById('octave');
+        const barsSelect = document.getElementById('bars');
+        const gridWrapper = document.getElementById('gridWrapper');
+        const scaleDisplay = document.getElementById('scaleDisplay');
+        const previewBtn = document.getElementById('previewBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Update BPM display
+        bpmSlider.addEventListener('input', (e) => {
+            bpmValue.textContent = e.target.value;
+        });
+
+        // Update scale display when root or scale changes
+        rootNoteSelect.addEventListener('change', updateScaleDisplay);
+        scaleSelect.addEventListener('change', updateScaleDisplay);
+
+        // Update scale display
+        function updateScaleDisplay() {
+            const root = parseInt(rootNoteSelect.value);
+            const scaleType = scaleSelect.value;
+            const intervals = SCALES[scaleType];
+
+            const notes = intervals.map(interval => {
+                const noteIndex = (root + interval) % 12;
+                return NOTE_NAMES[noteIndex];
+            });
+
+            scaleDisplay.textContent = notes.join(' - ');
+        }
+
+        // Get current scale notes as MIDI numbers
+        function getScaleNotes() {
+            const root = parseInt(rootNoteSelect.value);
+            const octave = parseInt(octaveSelect.value);
+            const scaleType = scaleSelect.value;
+            const intervals = SCALES[scaleType];
+
+            const baseNote = 12 * octave + root; // C2 = 24, A2 = 33
+
+            // Generate 2 octaves of the scale
+            const notes = [];
+            for (let oct = 0; oct < 2; oct++) {
+                for (let interval of intervals) {
+                    notes.push(baseNote + interval + (oct * 12));
+                }
+            }
+
+            return notes;
+        }
+
+        // Initialize grid
+        function initGrid() {
+            const bars = parseInt(barsSelect.value);
+            const steps = bars * 16;
+            const scaleNotes = getScaleNotes();
+
+            gridWrapper.style.setProperty('--steps', steps);
+
+            let html = '<div class="piano-roll">';
+
+            // Beat markers
+            html += '<div class="beat-markers"><div></div>';
+            for (let i = 0; i < steps; i++) {
+                const beatNum = (i % 16) + 1;
+                html += `<div class="beat-marker">${beatNum}</div>`;
+            }
+            html += '</div>';
+
+            // Piano roll rows (reverse order so higher notes are on top)
+            for (let n = scaleNotes.length - 1; n >= 0; n--) {
+                const midiNote = scaleNotes[n];
+                const noteName = NOTE_NAMES[midiNote % 12];
+                const noteOctave = Math.floor(midiNote / 12);
+
+                html += `<div class="piano-row">`;
+                html += `<div class="note-label">${noteName}${noteOctave}</div>`;
+
+                for (let step = 0; step < steps; step++) {
+                    const isAccent = step % 4 === 0;
+                    const accentClass = isAccent ? 'accent' : '';
+                    html += `<div class="piano-cell ${accentClass}" data-step="${step}" data-note="${midiNote}"></div>`;
+                }
+
+                html += '</div>';
+
+                // Add bar dividers
+                if (n > 0 && n % 7 === 0) {
+                    html += '<div class="bar-divider"></div>';
+                }
+            }
+
+            html += '</div>';
+            gridWrapper.innerHTML = html;
+
+            // Add click handlers
+            document.querySelectorAll('.piano-cell').forEach(cell => {
+                cell.addEventListener('click', () => toggleNote(cell));
+            });
+
+            updateGridFromPattern();
+        }
+
+        // Toggle note in pattern
+        function toggleNote(cell) {
+            const step = parseInt(cell.dataset.step);
+            const note = parseInt(cell.dataset.note);
+
+            const index = pattern.findIndex(p => p.step === step);
+
+            if (index >= 0) {
+                // Remove note
+                pattern.splice(index, 1);
+            } else {
+                // Add note
+                pattern.push({step, note});
+                pattern.sort((a, b) => a.step - b.step);
+            }
+
+            updateGridFromPattern();
+            downloadBtn.disabled = pattern.length === 0;
+        }
+
+        // Update grid visual from pattern
+        function updateGridFromPattern() {
+            document.querySelectorAll('.piano-cell').forEach(cell => {
+                cell.classList.remove('active');
+            });
+
+            pattern.forEach(p => {
+                const cell = document.querySelector(`[data-step="${p.step}"][data-note="${p.note}"]`);
+                if (cell) cell.classList.add('active');
+            });
+        }
+
+        // Generate pattern based on style
+        function generatePattern() {
+            pattern = [];
+            const bars = parseInt(barsSelect.value);
+            const steps = bars * 16;
+            const scaleNotes = getScaleNotes();
+            const style = styleSelect.value;
+
+            switch(style) {
+                case 'rolling':
+                    generateRolling(steps, scaleNotes);
+                    break;
+                case 'stabs':
+                    generateStabs(steps, scaleNotes);
+                    break;
+                case 'psytrance':
+                    generatePsytrance(steps, scaleNotes);
+                    break;
+                case 'tech':
+                    generateTech(steps, scaleNotes);
+                    break;
+                case 'progressive':
+                    generateProgressive(steps, scaleNotes);
+                    break;
+                case 'minimal':
+                    generateMinimal(steps, scaleNotes);
+                    break;
+            }
+
+            updateGridFromPattern();
+            downloadBtn.disabled = false;
+        }
+
+        function generateRolling(steps, scaleNotes) {
+            // 16th note rolling bassline
+            for (let i = 0; i < steps; i++) {
+                const noteIndex = i % scaleNotes.length;
+                pattern.push({step: i, note: scaleNotes[noteIndex]});
+            }
+        }
+
+        function generateStabs(steps, scaleNotes) {
+            // Longer sustained notes on beats
+            const root = scaleNotes[0];
+            const fifth = scaleNotes[4 % scaleNotes.length];
+
+            for (let bar = 0; bar < steps / 16; bar++) {
+                const offset = bar * 16;
+                pattern.push({step: offset, note: root});
+                pattern.push({step: offset + 4, note: fifth});
+                pattern.push({step: offset + 8, note: root});
+                pattern.push({step: offset + 12, note: fifth});
+            }
+        }
+
+        function generatePsytrance(steps, scaleNotes) {
+            // Constant 16th notes with pattern
+            for (let i = 0; i < steps; i++) {
+                if (i % 2 === 0) {
+                    const noteIndex = Math.floor(i / 4) % scaleNotes.length;
+                    pattern.push({step: i, note: scaleNotes[noteIndex]});
+                }
+            }
+        }
+
+        function generateTech(steps, scaleNotes) {
+            // Syncopated minimal groove
+            const root = scaleNotes[0];
+
+            for (let bar = 0; bar < steps / 16; bar++) {
+                const offset = bar * 16;
+                pattern.push({step: offset, note: root});
+                pattern.push({step: offset + 6, note: scaleNotes[2]});
+                pattern.push({step: offset + 10, note: scaleNotes[1]});
+                pattern.push({step: offset + 14, note: root});
+            }
+        }
+
+        function generateProgressive(steps, scaleNotes) {
+            // Melodic ascending/descending pattern
+            for (let i = 0; i < steps; i += 2) {
+                const barProgress = (i % 32) / 32;
+                let noteIndex;
+
+                if (barProgress < 0.5) {
+                    noteIndex = Math.floor(barProgress * scaleNotes.length * 2);
+                } else {
+                    noteIndex = scaleNotes.length - Math.floor((barProgress - 0.5) * scaleNotes.length * 2) - 1;
+                }
+
+                pattern.push({step: i, note: scaleNotes[Math.max(0, Math.min(scaleNotes.length - 1, noteIndex))]});
+            }
+        }
+
+        function generateMinimal(steps, scaleNotes) {
+            // Sparse, deep bass
+            const root = scaleNotes[0];
+
+            for (let bar = 0; bar < steps / 16; bar++) {
+                const offset = bar * 16;
+                pattern.push({step: offset, note: root});
+                pattern.push({step: offset + 7, note: scaleNotes[1]});
+            }
+        }
+
+        // Audio synthesis
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playBassNote(time, midiNote) {
+            const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+
+            // Oscillator (sawtooth for that bass sound)
+            const osc = audioContext.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, time);
+
+            // Filter for bass character
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, time);
+            filter.Q.setValueAtTime(5, time);
+
+            // Envelope
+            const gain = audioContext.createGain();
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.3, time + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.start(time);
+            osc.stop(time + 0.3);
+        }
+
+        function togglePreview() {
+            if (isPlaying) {
+                stopPreview();
+            } else {
+                startPreview();
+            }
+        }
+
+        function startPreview() {
+            if (pattern.length === 0) {
+                alert('Please generate a pattern first!');
+                return;
+            }
+
+            initAudio();
+
+            isPlaying = true;
+            previewBtn.textContent = '⏸️ Stop';
+            previewBtn.classList.add('playing');
+
+            const bpm = parseInt(bpmSlider.value);
+            const secondsPerBeat = 60 / bpm;
+            const secondsPer16th = secondsPerBeat / 4;
+
+            nextNoteTime = audioContext.currentTime;
+            currentStep = -1;
+
+            const bars = parseInt(barsSelect.value);
+            const totalSteps = bars * 16;
+
+            function scheduler() {
+                while (nextNoteTime < audioContext.currentTime + 0.1) {
+                    currentStep = (currentStep + 1) % totalSteps;
+
+                    // Clear previous playing cell
+                    document.querySelectorAll('.piano-cell.playing').forEach(cell => {
+                        cell.classList.remove('playing');
+                    });
+
+                    // Find notes at this step
+                    const notesAtStep = pattern.filter(p => p.step === currentStep);
+                    notesAtStep.forEach(p => {
+                        playBassNote(nextNoteTime, p.note);
+
+                        // Highlight cell
+                        const cell = document.querySelector(`[data-step="${p.step}"][data-note="${p.note}"]`);
+                        if (cell) {
+                            cell.classList.add('playing');
+                        }
+                    });
+
+                    nextNoteTime += secondsPer16th;
+                }
+
+                if (isPlaying) {
+                    schedulerTimer = setTimeout(scheduler, 25);
+                }
+            }
+
+            scheduler();
+        }
+
+        function stopPreview() {
+            isPlaying = false;
+            clearTimeout(schedulerTimer);
+
+            previewBtn.textContent = '▶️ Preview Sound';
+            previewBtn.classList.remove('playing');
+
+            document.querySelectorAll('.piano-cell.playing').forEach(cell => {
+                cell.classList.remove('playing');
+            });
+
+            currentStep = -1;
+        }
+
+        // MIDI export
+        function downloadMIDI() {
+            if (pattern.length === 0) {
+                alert('Please generate a pattern first!');
+                return;
+            }
+
+            const bars = parseInt(barsSelect.value);
+            const bpm = parseInt(bpmSlider.value);
+
+            const midiData = generateMIDIFile(pattern, bars, bpm);
+            const blob = new Blob([midiData], { type: 'audio/midi' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trance-bassline-${bars}bar-${bpm}bpm.mid`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        function generateMIDIFile(pattern, bars, bpm) {
+            const ticksPerQuarterNote = 96;
+            const ticksPer16th = ticksPerQuarterNote / 4;
+            const totalTicks = bars * 16 * ticksPer16th;
+
+            // Sort pattern by step
+            const sortedPattern = [...pattern].sort((a, b) => a.step - b.step);
+
+            // Build MIDI events
+            const events = [];
+
+            sortedPattern.forEach(p => {
+                const tick = p.step * ticksPer16th;
+                const velocity = (p.step % 4 === 0) ? 110 : 90;
+                const duration = ticksPer16th;
+
+                events.push({
+                    tick: tick,
+                    type: 'noteOn',
+                    note: p.note,
+                    velocity: velocity
+                });
+
+                events.push({
+                    tick: tick + duration,
+                    type: 'noteOff',
+                    note: p.note,
+                    velocity: 0
+                });
+            });
+
+            // Add end of track
+            events.push({
+                tick: totalTicks,
+                type: 'endOfTrack'
+            });
+
+            // Sort events by tick
+            events.sort((a, b) => a.tick - b.tick);
+
+            // Build MIDI track
+            const trackData = [];
+            let currentTick = 0;
+
+            events.forEach(event => {
+                const delta = event.tick - currentTick;
+                currentTick = event.tick;
+
+                // Write variable-length delta time
+                trackData.push(...writeVarLen(delta));
+
+                if (event.type === 'noteOn') {
+                    trackData.push(0x90, event.note, event.velocity);
+                } else if (event.type === 'noteOff') {
+                    trackData.push(0x80, event.note, 0);
+                } else if (event.type === 'endOfTrack') {
+                    trackData.push(0xFF, 0x2F, 0x00);
+                }
+            });
+
+            // Build complete MIDI file
+            const tempoMPQ = Math.round(60000000 / bpm);
+
+            const header = [
+                0x4D, 0x54, 0x68, 0x64, // "MThd"
+                0x00, 0x00, 0x00, 0x06, // Header length
+                0x00, 0x00, // Format 0
+                0x00, 0x01, // 1 track
+                (ticksPerQuarterNote >> 8) & 0xFF, ticksPerQuarterNote & 0xFF
+            ];
+
+            const tempoEvent = [
+                0x00, // Delta time
+                0xFF, 0x51, 0x03, // Tempo meta event
+                (tempoMPQ >> 16) & 0xFF,
+                (tempoMPQ >> 8) & 0xFF,
+                tempoMPQ & 0xFF
+            ];
+
+            const fullTrackData = [...tempoEvent, ...trackData];
+            const trackLength = fullTrackData.length;
+
+            const track = [
+                0x4D, 0x54, 0x72, 0x6B, // "MTrk"
+                (trackLength >> 24) & 0xFF,
+                (trackLength >> 16) & 0xFF,
+                (trackLength >> 8) & 0xFF,
+                trackLength & 0xFF,
+                ...fullTrackData
+            ];
+
+            return new Uint8Array([...header, ...track]);
+        }
+
+        function writeVarLen(value) {
+            const bytes = [];
+            bytes.push(value & 0x7F);
+            value >>= 7;
+
+            while (value > 0) {
+                bytes.unshift((value & 0x7F) | 0x80);
+                value >>= 7;
+            }
+
+            return bytes;
+        }
+
+        // Initialize
+        updateScaleDisplay();
+        barsSelect.addEventListener('change', initGrid);
+        initGrid();
+    </script>
+</body>
+</html>
