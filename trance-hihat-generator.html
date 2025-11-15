@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trance Hi-Hat Pattern Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #f5576c;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="range"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        .bpm-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f5576c;
+            text-align: center;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 4px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: #ddd;
+            border-radius: 4px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .grid-cell.closed {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+            transform: scale(1.1);
+        }
+
+        .grid-cell.open {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            box-shadow: 0 4px 12px rgba(253, 203, 110, 0.4);
+            transform: scale(1.1);
+        }
+
+        .grid-cell.playing {
+            animation: pulse 0.15s ease-in-out;
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.8);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1.1); }
+        }
+
+        .beat-numbers {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+            padding: 0 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .bar-divider {
+            grid-column: 1 / -1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f5576c, transparent);
+            margin: 8px 0;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .legend-color.closed {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .legend-color.open {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-preview {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-preview.playing {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4f8;
+            border-left: 4px solid #f5576c;
+            border-radius: 8px;
+        }
+
+        .info h3 {
+            color: #f5576c;
+            margin-bottom: 10px;
+        }
+
+        .info ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info li {
+            margin: 5px 0;
+        }
+
+        .audio-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .audio-notice strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎩 Trance Hi-Hat Generator</h1>
+        <p class="subtitle">Create • Preview • Export to MIDI • Perfect Hi-Hat Grooves</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="bpm">BPM</label>
+                <input type="range" id="bpm" min="120" max="145" value="138" step="1">
+                <div class="bpm-display" id="bpmDisplay">138</div>
+            </div>
+
+            <div class="control-group">
+                <label for="pattern">Pattern Style</label>
+                <select id="pattern">
+                    <option value="sixteenth">Classic 16th Notes</option>
+                    <option value="eighth">8th Note Groove</option>
+                    <option value="shuffled">Shuffled 16ths</option>
+                    <option value="triplets">Triplet Feel</option>
+                    <option value="offbeat">Offbeat 16ths</option>
+                    <option value="buildup">Build-up Roll</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="complexity">Open Hat Amount</label>
+                <select id="complexity">
+                    <option value="none">All Closed</option>
+                    <option value="few">Few Opens</option>
+                    <option value="medium">Balanced Mix</option>
+                    <option value="many">Many Opens</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="barLength">Pattern Length</label>
+                <select id="barLength" onchange="changeBarLength()">
+                    <option value="1">1 Bar (16 steps)</option>
+                    <option value="2">2 Bars (32 steps)</option>
+                    <option value="4">4 Bars (64 steps)</option>
+                    <option value="8">8 Bars (128 steps)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color closed"></div>
+                <span><strong>Closed Hi-Hat</strong> (Click once)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color open"></div>
+                <span><strong>Open Hi-Hat</strong> (Click twice)</span>
+            </div>
+        </div>
+
+        <div class="beat-numbers">
+            <div>1</div><div></div><div></div><div></div>
+            <div>2</div><div></div><div></div><div></div>
+            <div>3</div><div></div><div></div><div></div>
+            <div>4</div><div></div><div></div><div></div>
+        </div>
+
+        <div class="pattern-grid" id="patternGrid"></div>
+
+        <div class="buttons">
+            <button class="btn-generate" onclick="generatePattern()">🎲 Generate Pattern</button>
+            <button class="btn-preview" id="previewBtn" onclick="togglePreview()">▶️ Preview Sound</button>
+            <button class="btn-download" id="downloadBtn" onclick="downloadMIDI()" disabled>⬇️ Download MIDI</button>
+        </div>
+
+        <div class="audio-notice">
+            <strong>🔊 Audio Preview:</strong> Click "Preview Sound" to hear your hi-hat pattern! Closed hats = short click, Open hats = longer shimmer. Your exported MIDI will sound amazing with real hi-hat samples in Ableton.
+        </div>
+
+        <div class="info">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>🎚️ Adjust BPM (120-145 for trance/techno)</li>
+                <li>🎨 Choose a hi-hat pattern style</li>
+                <li>🎛️ Set open hat amount (more opens = more energy)</li>
+                <li>📏 Choose pattern length (1-8 bars)</li>
+                <li>🎲 Click "Generate Pattern" to create</li>
+                <li>👆 Click cells once for closed hat (pink), twice for open (yellow), three times to remove</li>
+                <li>▶️ Click "Preview Sound" to HEAR your pattern!</li>
+                <li>⬇️ Download MIDI and drag into Ableton</li>
+                <li>🥁 Closed hat = C#1 (42), Open hat = A#1 (46)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Pattern states: 0 = empty, 1 = closed, 2 = open
+        let currentPattern = [];
+        let currentBPM = 138;
+        let currentBars = 1;
+        let totalSteps = 16;
+        let audioContext = null;
+        let isPlaying = false;
+        let scheduledNotes = [];
+        let currentStep = 0;
+        let nextNoteTime = 0;
+        let lookahead = 25.0;
+        let scheduleAheadTime = 0.1;
+        let timerID = null;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Create synthesized hi-hat sounds
+        function playHiHat(time, type, velocity) {
+            if (!audioContext) return;
+
+            // Create white noise
+            const bufferSize = audioContext.sampleRate * 0.5;
+            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioContext.createBufferSource();
+            const noiseGain = audioContext.createGain();
+            const noiseFilter = audioContext.createBiquadFilter();
+
+            noise.buffer = noiseBuffer;
+
+            if (type === 2) { // Open hi-hat
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(8000, time);
+                noiseFilter.Q.setValueAtTime(1, time);
+
+                noiseGain.gain.setValueAtTime(velocity / 200, time);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioContext.destination);
+
+                noise.start(time);
+                noise.stop(time + 0.3);
+            } else { // Closed hi-hat
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.setValueAtTime(7000, time);
+
+                noiseGain.gain.setValueAtTime(velocity / 255, time);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioContext.destination);
+
+                noise.start(time);
+                noise.stop(time + 0.05);
+            }
+        }
+
+        // Scheduler for precise timing
+        function scheduler() {
+            while (nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+                scheduleNote(currentStep, nextNoteTime);
+                nextStep();
+            }
+            timerID = setTimeout(scheduler, lookahead);
+        }
+
+        function scheduleNote(beatNumber, time) {
+            const hatType = currentPattern[beatNumber];
+            if (hatType > 0) {
+                const velocity = 100;
+                playHiHat(time, hatType, velocity);
+
+                scheduledNotes.push({
+                    note: beatNumber,
+                    time: time
+                });
+            }
+        }
+
+        function nextStep() {
+            const secondsPerBeat = 60.0 / currentBPM;
+            const secondsPer16th = secondsPerBeat / 4;
+
+            nextNoteTime += secondsPer16th;
+            currentStep++;
+
+            if (currentStep >= totalSteps) {
+                currentStep = 0;
+            }
+        }
+
+        // Visual feedback during playback
+        function updateVisualFeedback() {
+            if (!isPlaying) return;
+
+            const currentTime = audioContext.currentTime;
+
+            scheduledNotes.forEach((note, index) => {
+                if (note.time <= currentTime && !note.played) {
+                    const grid = document.getElementById('patternGrid');
+                    const cells = Array.from(grid.children).filter(el => el.classList.contains('grid-cell'));
+                    const cell = cells[note.note];
+                    if (cell && (cell.classList.contains('closed') || cell.classList.contains('open'))) {
+                        cell.classList.add('playing');
+                        setTimeout(() => {
+                            cell.classList.remove('playing');
+                        }, 150);
+                    }
+                    note.played = true;
+                }
+            });
+
+            scheduledNotes = scheduledNotes.filter(note => !note.played);
+            requestAnimationFrame(updateVisualFeedback);
+        }
+
+        // Toggle preview playback
+        function togglePreview() {
+            if (!audioContext) {
+                initAudio();
+            }
+
+            if (isPlaying) {
+                stopPreview();
+            } else {
+                startPreview();
+            }
+        }
+
+        function startPreview() {
+            if (isPlaying) return;
+
+            isPlaying = true;
+            currentStep = 0;
+            nextNoteTime = audioContext.currentTime;
+            scheduledNotes = [];
+
+            scheduler();
+            updateVisualFeedback();
+
+            const btn = document.getElementById('previewBtn');
+            btn.textContent = '⏹️ Stop';
+            btn.classList.add('playing');
+        }
+
+        function stopPreview() {
+            isPlaying = false;
+            if (timerID) {
+                clearTimeout(timerID);
+                timerID = null;
+            }
+
+            const btn = document.getElementById('previewBtn');
+            btn.textContent = '▶️ Preview Sound';
+            btn.classList.remove('playing');
+        }
+
+        // Change bar length
+        function changeBarLength() {
+            const barLength = parseInt(document.getElementById('barLength').value);
+            currentBars = barLength;
+            totalSteps = 16 * barLength;
+
+            if (isPlaying) {
+                stopPreview();
+            }
+
+            const oldPattern = [...currentPattern];
+            currentPattern = new Array(totalSteps).fill(0);
+
+            for (let i = 0; i < Math.min(oldPattern.length, totalSteps); i++) {
+                currentPattern[i] = oldPattern[i];
+            }
+
+            initGrid();
+            updateBeatNumbers();
+            updateGrid();
+        }
+
+        // Update beat numbers display
+        function updateBeatNumbers() {
+            const beatDiv = document.querySelector('.beat-numbers');
+            beatDiv.innerHTML = '';
+            beatDiv.style.gridTemplateColumns = `repeat(16, 1fr)`;
+
+            for (let bar = 0; bar < currentBars; bar++) {
+                for (let beat = 0; beat < 16; beat++) {
+                    const div = document.createElement('div');
+                    if (beat % 4 === 0) {
+                        const beatNumber = (beat / 4) + 1 + (bar * 4);
+                        div.textContent = beatNumber;
+                    }
+                    beatDiv.appendChild(div);
+                }
+
+                if (bar < currentBars - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'bar-divider';
+                    beatDiv.appendChild(divider);
+                }
+            }
+        }
+
+        // Initialize pattern grid
+        function initGrid() {
+            const grid = document.getElementById('patternGrid');
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(16, 1fr)`;
+
+            for (let bar = 0; bar < currentBars; bar++) {
+                for (let i = 0; i < 16; i++) {
+                    const stepIndex = (bar * 16) + i;
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.step = stepIndex;
+                    cell.onclick = () => toggleStep(stepIndex);
+                    grid.appendChild(cell);
+                }
+
+                if (bar < currentBars - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'bar-divider';
+                    grid.appendChild(divider);
+                }
+            }
+        }
+
+        // Toggle individual step (0 -> 1 -> 2 -> 0)
+        function toggleStep(step) {
+            currentPattern[step] = (currentPattern[step] + 1) % 3;
+            updateGrid();
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        // Update visual grid
+        function updateGrid() {
+            const grid = document.getElementById('patternGrid');
+            const cells = Array.from(grid.children).filter(el => el.classList.contains('grid-cell'));
+
+            for (let i = 0; i < totalSteps; i++) {
+                if (cells[i]) {
+                    cells[i].className = 'grid-cell';
+                    if (currentPattern[i] === 1) {
+                        cells[i].classList.add('closed');
+                    } else if (currentPattern[i] === 2) {
+                        cells[i].classList.add('open');
+                    }
+                }
+            }
+        }
+
+        // BPM slider
+        document.getElementById('bpm').addEventListener('input', function(e) {
+            currentBPM = e.target.value;
+            document.getElementById('bpmDisplay').textContent = currentBPM;
+
+            if (isPlaying) {
+                stopPreview();
+                setTimeout(startPreview, 100);
+            }
+        });
+
+        // Generate pattern based on style
+        function generatePattern() {
+            const style = document.getElementById('pattern').value;
+            const openAmount = document.getElementById('complexity').value;
+
+            if (isPlaying) {
+                stopPreview();
+            }
+
+            currentPattern = new Array(totalSteps).fill(0);
+
+            for (let bar = 0; bar < currentBars; bar++) {
+                const offset = bar * 16;
+
+                switch(style) {
+                    case 'sixteenth':
+                        // Classic 16th notes - all steps
+                        for (let i = 0; i < 16; i++) {
+                            currentPattern[offset + i] = 1; // closed
+                        }
+                        break;
+
+                    case 'eighth':
+                        // 8th note groove - every other step
+                        for (let i = 0; i < 16; i += 2) {
+                            currentPattern[offset + i] = 1;
+                        }
+                        break;
+
+                    case 'shuffled':
+                        // Shuffled 16ths - skip some for swing
+                        for (let i = 0; i < 16; i++) {
+                            if (i % 4 !== 1) { // Skip the "e" of each beat
+                                currentPattern[offset + i] = 1;
+                            }
+                        }
+                        break;
+
+                    case 'triplets':
+                        // Triplet feel - every 3rd step emphasis
+                        for (let i = 0; i < 16; i++) {
+                            currentPattern[offset + i] = 1;
+                        }
+                        break;
+
+                    case 'offbeat':
+                        // Offbeat 16ths
+                        for (let i = 1; i < 16; i += 2) {
+                            currentPattern[offset + i] = 1;
+                        }
+                        break;
+
+                    case 'buildup':
+                        // Build-up roll - increasing density
+                        const density = Math.min(16, Math.floor((bar + 1) * 4));
+                        for (let i = 0; i < density; i++) {
+                            currentPattern[offset + i] = 1;
+                        }
+                        break;
+                }
+
+                // Add open hats based on complexity
+                const openPositions = [];
+                switch(openAmount) {
+                    case 'few':
+                        openPositions.push(7, 15);
+                        break;
+                    case 'medium':
+                        openPositions.push(3, 7, 11, 15);
+                        break;
+                    case 'many':
+                        openPositions.push(2, 3, 6, 7, 10, 11, 14, 15);
+                        break;
+                }
+
+                openPositions.forEach(pos => {
+                    if (currentPattern[offset + pos] === 1) {
+                        currentPattern[offset + pos] = 2; // change to open
+                    }
+                });
+            }
+
+            updateGrid();
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        // MIDI file generation
+        function downloadMIDI() {
+            const midi = generateMIDIFile();
+            const blob = new Blob([midi], { type: 'audio/midi' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trance-hihat-${currentBPM}bpm-${Date.now()}.mid`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generateMIDIFile() {
+            const header = [
+                0x4D, 0x54, 0x68, 0x64,
+                0x00, 0x00, 0x00, 0x06,
+                0x00, 0x00,
+                0x00, 0x01,
+                0x00, 0x60
+            ];
+
+            const microsecondsPerBeat = Math.round(60000000 / currentBPM);
+            const tempoBytes = [
+                0xFF, 0x51, 0x03,
+                (microsecondsPerBeat >> 16) & 0xFF,
+                (microsecondsPerBeat >> 8) & 0xFF,
+                microsecondsPerBeat & 0xFF
+            ];
+
+            const events = [];
+            events.push(0x00, ...tempoBytes);
+
+            const ticksPer16th = 24;
+            let lastNoteTime = 0;
+
+            for (let i = 0; i < totalSteps; i++) {
+                const hatType = currentPattern[i];
+                if (hatType > 0) {
+                    const note = hatType === 1 ? 0x2A : 0x2E; // Closed=42, Open=46
+                    const velocity = 100;
+
+                    const currentNoteTime = i * ticksPer16th;
+                    let deltaTime = currentNoteTime - lastNoteTime;
+
+                    if (deltaTime < 128) {
+                        events.push(deltaTime);
+                    } else {
+                        const bytes = [];
+                        let value = deltaTime;
+                        bytes.push(value & 0x7F);
+                        value >>= 7;
+                        while (value > 0) {
+                            bytes.unshift((value & 0x7F) | 0x80);
+                            value >>= 7;
+                        }
+                        events.push(...bytes);
+                    }
+
+                    events.push(0x90, note, velocity);
+                    events.push(0x0A);
+                    events.push(0x80, note, 0x00);
+
+                    lastNoteTime = currentNoteTime + 0x0A;
+                }
+            }
+
+            events.push(0x00, 0xFF, 0x2F, 0x00);
+
+            const trackLength = events.length;
+            const trackHeader = [
+                0x4D, 0x54, 0x72, 0x6B,
+                (trackLength >> 24) & 0xFF,
+                (trackLength >> 16) & 0xFF,
+                (trackLength >> 8) & 0xFF,
+                trackLength & 0xFF
+            ];
+
+            return new Uint8Array([...header, ...trackHeader, ...events]);
+        }
+
+        // Initialize on load
+        initGrid();
+        updateBeatNumbers();
+        generatePattern();
+    </script>
+</body>
+</html>
