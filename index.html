@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trance Machine Toolkit - Beat Generators for Ableton Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3em;
+            margin-bottom: 50px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .tool-icon {
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tool-title {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .tool-description {
+            text-align: center;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .tool-features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .tool-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38ef7d;
+            font-weight: bold;
+        }
+
+        .card-kick {
+            border-top: 4px solid #667eea;
+        }
+
+        .card-kick .tool-title {
+            color: #667eea;
+        }
+
+        .card-hihat {
+            border-top: 4px solid #f5576c;
+        }
+
+        .card-hihat .tool-title {
+            color: #f5576c;
+        }
+
+        .card-snare {
+            border-top: 4px solid #2BD2FF;
+        }
+
+        .card-snare .tool-title {
+            color: #2BD2FF;
+        }
+
+        .card-drumkit {
+            border-top: 4px solid #38ef7d;
+        }
+
+        .card-drumkit .tool-title {
+            color: #38ef7d;
+        }
+
+        .card-coming-soon {
+            border-top: 4px solid #a29bfe;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .card-coming-soon:hover {
+            transform: none;
+        }
+
+        .card-coming-soon .tool-title {
+            color: #a29bfe;
+        }
+
+        .coming-soon-badge {
+            background: #a29bfe;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .info-section p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .info-section ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Trance Machine Toolkit</h1>
+        <p class="subtitle">Professional Beat Generators for Ableton Live • Audio Preview • MIDI Export</p>
+
+        <div class="tools-grid">
+            <a href="trance-kick-generator.html" class="tool-card card-kick">
+                <div class="tool-icon">🥁</div>
+                <div class="tool-title">Kick Generator</div>
+                <div class="tool-description">
+                    Create powerful kick drum patterns with 5 trance/techno styles
+                </div>
+                <ul class="tool-features">
+                    <li>5 pattern styles</li>
+                    <li>Audio preview in browser</li>
+                    <li>Multi-bar support (1-8 bars)</li>
+                    <li>BPM control (120-145)</li>
+                    <li>Instant MIDI export</li>
+                </ul>
+            </a>
+
+            <a href="trance-hihat-generator.html" class="tool-card card-hihat">
+                <div class="tool-icon">🎩</div>
+                <div class="tool-title">Hi-Hat Generator</div>
+                <div class="tool-description">
+                    Perfect hi-hat grooves with open/closed variations
+                </div>
+                <ul class="tool-features">
+                    <li>6 pattern styles</li>
+                    <li>Open & closed hi-hats</li>
+                    <li>Audio preview with synthesis</li>
+                    <li>Up to 8 bars per pattern</li>
+                    <li>Click to toggle hat types</li>
+                </ul>
+            </a>
+
+            <a href="trance-snare-generator.html" class="tool-card card-snare">
+                <div class="tool-icon">🥁</div>
+                <div class="tool-title">Snare Generator</div>
+                <div class="tool-description">
+                    Snare patterns with ghost notes and dynamic fills
+                </div>
+                <ul class="tool-features">
+                    <li>6 pattern styles</li>
+                    <li>Snare / Clap / Ghost notes</li>
+                    <li>Build-up rolls</li>
+                    <li>Audio preview</li>
+                    <li>Velocity-sensitive exports</li>
+                </ul>
+            </a>
+
+            <div class="tool-card card-coming-soon">
+                <div class="tool-icon">🎹</div>
+                <div class="tool-title">Full Drum Kit</div>
+                <div class="tool-description">
+                    Complete drum patterns with kick, snare, and hats combined
+                </div>
+                <span class="coming-soon-badge">🚧 Coming Soon</span>
+                <ul class="tool-features">
+                    <li>All-in-one drum patterns</li>
+                    <li>Genre-specific grooves</li>
+                    <li>Multi-track MIDI export</li>
+                    <li>Full beat preview</li>
+                </ul>
+            </div>
+
+            <div class="tool-card card-coming-soon">
+                <div class="tool-icon">🎹</div>
+                <div class="tool-title">Bassline Generator</div>
+                <div class="tool-description">
+                    Psytrance and techno basslines with scale selection
+                </div>
+                <span class="coming-soon-badge">🚧 Coming Soon</span>
+                <ul class="tool-features">
+                    <li>Note & scale selection</li>
+                    <li>Rolling basslines</li>
+                    <li>Trance stabs</li>
+                    <li>Audio preview with synth</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>📖 How to Use</h2>
+            <p><strong>1. Choose a Generator:</strong> Click any tool card above to open the pattern generator.</p>
+            <p><strong>2. Create Your Pattern:</strong> Set BPM, choose a style, and generate or manually create patterns.</p>
+            <p><strong>3. Preview:</strong> Click "Preview Sound" to hear your pattern in the browser!</p>
+            <p><strong>4. Download:</strong> Export as MIDI and drag into Ableton Live.</p>
+            <p><strong>5. Make Music:</strong> Assign samples in Impulse/Simpler and start producing!</p>
+
+            <h2 style="margin-top: 40px;">🎯 Perfect For:</h2>
+            <ul>
+                <li><strong>Trance Producers</strong> - Classic 4-on-floor, build-ups, and rolls</li>
+                <li><strong>Techno Artists</strong> - Minimal hits, complex grooves, and evolving patterns</li>
+                <li><strong>Psytrance</strong> - Rolling basslines, constant 16ths, and high-energy patterns</li>
+                <li><strong>Ableton Live Intro Users</strong> - Maximize your 16-track limit with pre-made MIDI</li>
+                <li><strong>Quick Workflow</strong> - Generate patterns in seconds, not hours</li>
+            </ul>
+
+            <h2 style="margin-top: 40px;">⚡ Features:</h2>
+            <ul>
+                <li>✅ <strong>Audio Preview</strong> - Hear patterns before exporting</li>
+                <li>✅ <strong>Multi-Bar Support</strong> - Up to 8 bars (128 steps)</li>
+                <li>✅ <strong>No Installation</strong> - Pure HTML, works offline</li>
+                <li>✅ <strong>All Browsers</strong> - Chrome, Firefox, Safari, Edge</li>
+                <li>✅ <strong>100% Free</strong> - No subscriptions, no limits</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
