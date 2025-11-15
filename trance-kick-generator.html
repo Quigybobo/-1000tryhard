@@ -97,6 +97,8 @@
             padding: 20px;
             background: #f5f5f5;
             border-radius: 12px;
+            max-height: 600px;
+            overflow-y: auto;
         }
 
         .grid-cell {
@@ -137,6 +139,15 @@
             font-size: 0.8em;
             color: #666;
             padding: 0 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .bar-divider {
+            grid-column: 1 / -1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 8px 0;
         }
 
         .buttons {
@@ -265,6 +276,16 @@
                     <option value="complex">Complex (Full fills)</option>
                 </select>
             </div>
+
+            <div class="control-group">
+                <label for="barLength">Pattern Length</label>
+                <select id="barLength" onchange="changeBarLength()">
+                    <option value="1">1 Bar (16 steps)</option>
+                    <option value="2">2 Bars (32 steps)</option>
+                    <option value="4">4 Bars (64 steps)</option>
+                    <option value="8">8 Bars (128 steps)</option>
+                </select>
+            </div>
         </div>
 
         <div class="beat-numbers">
@@ -303,6 +324,8 @@
     <script>
         let currentPattern = [];
         let currentBPM = 138;
+        let currentBars = 1;
+        let totalSteps = 16;
         let audioContext = null;
         let isPlaying = false;
         let scheduledNotes = [];
@@ -396,7 +419,7 @@
             nextNoteTime += secondsPer16th;
             currentStep++;
 
-            if (currentStep >= 16) {
+            if (currentStep >= totalSteps) {
                 currentStep = 0;
             }
         }
@@ -410,8 +433,9 @@
             scheduledNotes.forEach((note, index) => {
                 if (note.time <= currentTime && !note.played) {
                     const grid = document.getElementById('patternGrid');
-                    const cell = grid.children[note.note];
-                    if (cell.classList.contains('active')) {
+                    const cells = Array.from(grid.children).filter(el => el.classList.contains('grid-cell'));
+                    const cell = cells[note.note];
+                    if (cell && cell.classList.contains('active')) {
                         cell.classList.add('playing');
                         setTimeout(() => {
                             cell.classList.remove('playing');
@@ -468,16 +492,78 @@
             btn.classList.remove('playing');
         }
 
+        // Change bar length
+        function changeBarLength() {
+            const barLength = parseInt(document.getElementById('barLength').value);
+            currentBars = barLength;
+            totalSteps = 16 * barLength;
+
+            // Stop preview if playing
+            if (isPlaying) {
+                stopPreview();
+            }
+
+            // Resize pattern array
+            const oldPattern = [...currentPattern];
+            currentPattern = new Array(totalSteps).fill(false);
+
+            // Copy old pattern data
+            for (let i = 0; i < Math.min(oldPattern.length, totalSteps); i++) {
+                currentPattern[i] = oldPattern[i];
+            }
+
+            initGrid();
+            updateBeatNumbers();
+            updateGrid();
+        }
+
+        // Update beat numbers display
+        function updateBeatNumbers() {
+            const beatDiv = document.querySelector('.beat-numbers');
+            beatDiv.innerHTML = '';
+            beatDiv.style.gridTemplateColumns = `repeat(16, 1fr)`;
+
+            for (let bar = 0; bar < currentBars; bar++) {
+                for (let beat = 0; beat < 16; beat++) {
+                    const div = document.createElement('div');
+                    if (beat % 4 === 0) {
+                        const beatNumber = (beat / 4) + 1 + (bar * 4);
+                        div.textContent = beatNumber;
+                    }
+                    beatDiv.appendChild(div);
+                }
+
+                // Add bar divider (except after last bar)
+                if (bar < currentBars - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'bar-divider';
+                    beatDiv.appendChild(divider);
+                }
+            }
+        }
+
         // Initialize pattern grid
         function initGrid() {
             const grid = document.getElementById('patternGrid');
             grid.innerHTML = '';
-            for (let i = 0; i < 16; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell';
-                cell.dataset.step = i;
-                cell.onclick = () => toggleStep(i);
-                grid.appendChild(cell);
+            grid.style.gridTemplateColumns = `repeat(16, 1fr)`;
+
+            for (let bar = 0; bar < currentBars; bar++) {
+                for (let i = 0; i < 16; i++) {
+                    const stepIndex = (bar * 16) + i;
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.step = stepIndex;
+                    cell.onclick = () => toggleStep(stepIndex);
+                    grid.appendChild(cell);
+                }
+
+                // Add bar divider (except after last bar)
+                if (bar < currentBars - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'bar-divider';
+                    grid.appendChild(divider);
+                }
             }
         }
 
@@ -491,14 +577,17 @@
         // Update visual grid
         function updateGrid() {
             const grid = document.getElementById('patternGrid');
-            const cells = grid.children;
-            for (let i = 0; i < 16; i++) {
-                cells[i].className = 'grid-cell';
-                if (currentPattern[i]) {
-                    cells[i].classList.add('active');
-                    // Accent on beats 1, 5, 9, 13 (stronger kicks)
-                    if (i % 4 === 0) {
-                        cells[i].classList.add('accent');
+            const cells = Array.from(grid.children).filter(el => el.classList.contains('grid-cell'));
+
+            for (let i = 0; i < totalSteps; i++) {
+                if (cells[i]) {
+                    cells[i].className = 'grid-cell';
+                    if (currentPattern[i]) {
+                        cells[i].classList.add('active');
+                        // Accent on beats 1, 5, 9, 13 (stronger kicks)
+                        if (i % 4 === 0) {
+                            cells[i].classList.add('accent');
+                        }
                     }
                 }
             }
@@ -526,67 +615,77 @@
                 stopPreview();
             }
 
-            currentPattern = new Array(16).fill(false);
+            currentPattern = new Array(totalSteps).fill(false);
 
-            switch(style) {
-                case 'four-floor':
-                    // Classic 4-on-floor: kick on every beat
-                    currentPattern[0] = true;
-                    currentPattern[4] = true;
-                    currentPattern[8] = true;
-                    currentPattern[12] = true;
-                    break;
+            // Generate base pattern for each bar
+            for (let bar = 0; bar < currentBars; bar++) {
+                const offset = bar * 16;
 
-                case 'rolling':
-                    // Rolling bass: kicks with 8th note rolls
-                    currentPattern[0] = true;
-                    currentPattern[2] = true;
-                    currentPattern[4] = true;
-                    currentPattern[6] = true;
-                    currentPattern[8] = true;
-                    currentPattern[10] = true;
-                    currentPattern[12] = true;
-                    currentPattern[14] = true;
-                    break;
+                switch(style) {
+                    case 'four-floor':
+                        // Classic 4-on-floor: kick on every beat
+                        currentPattern[offset + 0] = true;
+                        currentPattern[offset + 4] = true;
+                        currentPattern[offset + 8] = true;
+                        currentPattern[offset + 12] = true;
+                        break;
 
-                case 'psytrance':
-                    // Psytrance: constant 16th notes
-                    currentPattern.fill(true);
-                    break;
+                    case 'rolling':
+                        // Rolling bass: kicks with 8th note rolls
+                        currentPattern[offset + 0] = true;
+                        currentPattern[offset + 2] = true;
+                        currentPattern[offset + 4] = true;
+                        currentPattern[offset + 6] = true;
+                        currentPattern[offset + 8] = true;
+                        currentPattern[offset + 10] = true;
+                        currentPattern[offset + 12] = true;
+                        currentPattern[offset + 14] = true;
+                        break;
 
-                case 'progressive':
-                    // Progressive: 4-on-floor with strategic fills
-                    currentPattern[0] = true;
-                    currentPattern[4] = true;
-                    currentPattern[8] = true;
-                    currentPattern[12] = true;
-                    currentPattern[15] = true; // Fill before loop
-                    break;
+                    case 'psytrance':
+                        // Psytrance: constant 16th notes
+                        for (let i = 0; i < 16; i++) {
+                            currentPattern[offset + i] = true;
+                        }
+                        break;
 
-                case 'offbeat':
-                    // Offbeat groove
-                    currentPattern[2] = true;
-                    currentPattern[6] = true;
-                    currentPattern[10] = true;
-                    currentPattern[14] = true;
-                    break;
-            }
+                    case 'progressive':
+                        // Progressive: 4-on-floor with strategic fills
+                        currentPattern[offset + 0] = true;
+                        currentPattern[offset + 4] = true;
+                        currentPattern[offset + 8] = true;
+                        currentPattern[offset + 12] = true;
+                        // Add fill at end of last bar
+                        if (bar === currentBars - 1) {
+                            currentPattern[offset + 15] = true;
+                        }
+                        break;
 
-            // Add complexity variations
-            if (complexity === 'medium') {
-                // Add some ghost notes
-                if (style !== 'psytrance') {
-                    currentPattern[7] = true;
-                    currentPattern[15] = true;
+                    case 'offbeat':
+                        // Offbeat groove
+                        currentPattern[offset + 2] = true;
+                        currentPattern[offset + 6] = true;
+                        currentPattern[offset + 10] = true;
+                        currentPattern[offset + 14] = true;
+                        break;
                 }
-            } else if (complexity === 'complex') {
-                // Add more fills
-                if (style === 'four-floor' || style === 'progressive') {
-                    currentPattern[3] = true;
-                    currentPattern[7] = true;
-                    currentPattern[11] = true;
-                    currentPattern[14] = true;
-                    currentPattern[15] = true;
+
+                // Add complexity variations per bar
+                if (complexity === 'medium') {
+                    // Add some ghost notes
+                    if (style !== 'psytrance') {
+                        currentPattern[offset + 7] = true;
+                        currentPattern[offset + 15] = true;
+                    }
+                } else if (complexity === 'complex') {
+                    // Add more fills
+                    if (style === 'four-floor' || style === 'progressive') {
+                        currentPattern[offset + 3] = true;
+                        currentPattern[offset + 7] = true;
+                        currentPattern[offset + 11] = true;
+                        currentPattern[offset + 14] = true;
+                        currentPattern[offset + 15] = true;
+                    }
                 }
             }
 
@@ -636,34 +735,39 @@
 
             // MIDI note events (C1 = kick drum, note 36)
             const ticksPer16th = 24; // 96 ticks per quarter / 4 sixteenth notes
+            let lastNoteTime = 0;
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < totalSteps; i++) {
                 if (currentPattern[i]) {
                     const velocity = (i % 4 === 0) ? 127 : 100; // Accent on beats
 
-                    // Note on
-                    if (i === 0) {
-                        events.push(0x00); // Delta time (first note is immediate after tempo)
-                    } else {
-                        const deltaTime = ticksPer16th;
+                    // Calculate delta time
+                    const currentNoteTime = i * ticksPer16th;
+                    let deltaTime = currentNoteTime - lastNoteTime;
+
+                    // Variable-length delta encoding
+                    if (deltaTime < 128) {
                         events.push(deltaTime);
+                    } else {
+                        // For larger values, use variable-length encoding
+                        const bytes = [];
+                        let value = deltaTime;
+                        bytes.push(value & 0x7F);
+                        value >>= 7;
+                        while (value > 0) {
+                            bytes.unshift((value & 0x7F) | 0x80);
+                            value >>= 7;
+                        }
+                        events.push(...bytes);
                     }
+
                     events.push(0x90, 0x24, velocity); // Note on, C1, velocity
 
                     // Note off (10 ticks later = short kick)
-                    events.push(0x0A); // Delta time
+                    events.push(0x0A);
                     events.push(0x80, 0x24, 0x00); // Note off
 
-                    // Adjust next delta
-                    if (i < 15 && currentPattern[i]) {
-                        // Subtract the note duration from next delta
-                        if (!currentPattern[i + 1]) {
-                            events.push(ticksPer16th - 0x0A);
-                        }
-                    }
-                } else if (i > 0) {
-                    // No note, just advance time
-                    events.push(ticksPer16th);
+                    lastNoteTime = currentNoteTime + 0x0A;
                 }
             }
 
@@ -685,6 +789,7 @@
 
         // Initialize on load
         initGrid();
+        updateBeatNumbers();
         generatePattern();
     </script>
 </body>
