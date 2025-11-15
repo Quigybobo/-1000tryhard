@@ -8,13 +8,18 @@ A complete suite of web-based MIDI pattern generators for trance, techno, and el
 
 ## 🚀 WHAT YOU'VE GOT
 
-A **fully functional** collection of 5 professional music production tools:
+A **fully functional** collection of 7 professional music production tools:
 
+### Pattern Generators
 1. **Kick Generator** - Powerful kick drum patterns
 2. **Hi-Hat Generator** - Open/closed hi-hat grooves
 3. **Snare Generator** - Snare, clap, and ghost note patterns
 4. **Full Drum Kit** - Complete drum patterns (all instruments combined)
 5. **Bassline Generator** - Scale-based melodic basslines
+
+### Advanced Integrations
+6. **Live MIDI Controller** - Real-time MIDI to Ableton Live (Web MIDI API)
+7. **MCP Server** - AI-assisted pattern generation with Claude Desktop
 
 Each tool features:
 - ✅ **Audio Preview** - Hear patterns in your browser before exporting
@@ -23,6 +28,12 @@ Each tool features:
 - ✅ **MIDI Export** - Real .mid files for any DAW
 - ✅ **No Installation** - Pure HTML, works offline
 - ✅ **100% Free** - No subscriptions, no limits
+
+### NEW: Advanced Features
+- ✅ **Web MIDI API** - Send MIDI directly to Ableton Live (no file export!)
+- ✅ **MCP Integration** - Talk to Claude to generate patterns via natural language
+- ✅ **Real-time Control** - Play patterns live into your DAW
+- ✅ **AI-Assisted** - "Generate a psytrance drop at 142 BPM" → Done!
 
 ---
 
@@ -39,7 +50,15 @@ Each tool features:
 - **`trance-drumkit-generator.html`** - Full drum kit generator
 - **`trance-bassline-generator.html`** - Bassline generator with scales
 
+### Advanced Tools
+- **`trance-live-controller.html`** - Real-time Web MIDI controller
+- **`mcp-integration.html`** - MCP/AI integration info page
+- **`mcp-server/`** - MCP server for Claude Desktop integration
+
 ### Documentation
+- **`README.md`** - This file (main documentation)
+- **`INTEGRATION-GUIDE.md`** - Integration options and setup
+- **`mcp-server/README.md`** - MCP server documentation
 - **`README-TRANCE-GENERATOR.md`** - Original kick generator docs (legacy)
 
 ---

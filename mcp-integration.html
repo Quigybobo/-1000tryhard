@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Integration - AI-Assisted Pattern Generation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #764ba2;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #764ba2;
+            font-size: 0.95em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e0f7ff, #e8f4f8);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 5px solid #667eea;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff5e0, #ffe8cc);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 5px solid #ff9800;
+        }
+
+        .warning-box h3 {
+            color: #ff9800;
+            margin-top: 0;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border-left: 5px solid #4caf50;
+        }
+
+        .success-box h3 {
+            color: #4caf50;
+            margin-top: 0;
+        }
+
+        .example-conv {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #764ba2;
+        }
+
+        .user-msg {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .ai-msg {
+            background: #f093fb;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        strong {
+            color: #667eea;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 MCP Integration</h1>
+        <p class="subtitle">AI-Assisted Pattern Generation • Natural Language Commands • Claude Desktop</p>
+
+        <div class="info-box">
+            <h3>✨ What is MCP Integration?</h3>
+            <p>The <strong>Model Context Protocol (MCP)</strong> allows AI assistants like <strong>Claude</strong> to use the Trance Machine Toolkit directly!</p>
+            <p>Instead of manually opening tools and clicking buttons, you can just <strong>talk to Claude</strong> and have it generate patterns for you.</p>
+        </div>
+
+        <h2>💬 Example: Natural Language Pattern Generation</h2>
+
+        <div class="example-conv">
+            <div class="user-msg">
+                <strong>You:</strong> "Generate a psytrance drop at 142 BPM in E phrygian dominant and save it to my Ableton project folder"
+            </div>
+
+            <div class="ai-msg">
+                <strong>Claude:</strong> I'll generate a complete psytrance drop for you!
+                <br><br>
+                <em>[Uses MCP tools to generate]</em>
+                <br><br>
+                ✅ Generated:<br>
+                • Psytrance drums (kick + hi-hat + snare) at 142 BPM<br>
+                • Psytrance bassline in E phrygian dominant at 142 BPM<br>
+                <br>
+                Files saved to: /Users/you/Music/Ableton/Project/MIDI/<br>
+                • psytrance-drums-142bpm.mid<br>
+                • psytrance-bass-Ephrygian-142bpm.mid<br>
+                <br>
+                Import these MIDI files into Ableton Live and start producing! 🚀
+            </div>
+        </div>
+
+        <h2>🚀 Setup Instructions</h2>
+
+        <h3>Step 1: Install Dependencies</h3>
+
+        <p>Navigate to the MCP server directory and install Node.js packages:</p>
+
+        <pre>cd mcp-server
+npm install</pre>
+
+        <h3>Step 2: Configure Claude Desktop</h3>
+
+        <p>Add the MCP server to your Claude Desktop configuration file:</p>
+
+        <div class="info-box">
+            <p><strong>macOS:</strong> <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+            <p><strong>Windows:</strong> <code>%APPDATA%\Claude\claude_desktop_config.json</code></p>
+        </div>
+
+        <p>Edit the config file and add:</p>
+
+        <pre>{
+  "mcpServers": {
+    "trance-machine": {
+      "command": "node",
+      "args": ["/path/to/mcp-server/index.js"]
+    }
+  }
+}</pre>
+
+        <div class="warning-box">
+            <h3>⚠️ Important</h3>
+            <p>Replace <code>/path/to/mcp-server/index.js</code> with the <strong>actual full path</strong> to the MCP server on your system!</p>
+            <p><strong>Example:</strong> <code>/Users/yourname/Music/-1000tryhard/mcp-server/index.js</code></p>
+        </div>
+
+        <h3>Step 3: Restart Claude Desktop</h3>
+
+        <p>Close and reopen Claude Desktop. The MCP server will automatically connect on startup.</p>
+
+        <h3>Step 4: Test It!</h3>
+
+        <p>Open Claude Desktop and try:</p>
+
+        <pre>"Generate uplifting trance drums at 138 BPM"</pre>
+
+        <p>Claude will use the MCP server to generate the pattern and return MIDI data!</p>
+
+        <div class="success-box">
+            <h3>✅ Success!</h3>
+            <p>You can now generate patterns by just talking to Claude!</p>
+        </div>
+
+        <h2>🎵 Available Commands</h2>
+
+        <p>Here are some example natural language commands you can use:</p>
+
+        <h3>Quick Pattern Generation</h3>
+        <ul>
+            <li>"Generate a classic 4-on-floor kick at 138 BPM"</li>
+            <li>"Create 16th note hi-hats with open accents"</li>
+            <li>"Make a backbeat snare pattern"</li>
+            <li>"Generate a rolling bassline in A minor"</li>
+        </ul>
+
+        <h3>Complete Drum Kits</h3>
+        <ul>
+            <li>"Generate uplifting trance drums at 138 BPM"</li>
+            <li>"Create a psytrance drum kit at 142 BPM"</li>
+            <li>"Make tech trance drums with syncopated patterns"</li>
+        </ul>
+
+        <h3>Full Tracks</h3>
+        <ul>
+            <li>"Generate a full uplifting trance track at 138 BPM in A minor"</li>
+            <li>"Create a complete psytrance drop at 142 BPM in E phrygian dominant"</li>
+            <li>"Make a progressive trance arrangement at 130 BPM"</li>
+        </ul>
+
+        <h3>Custom Specifications</h3>
+        <ul>
+            <li>"I need 8 bars of psytrance kicks at 142 BPM"</li>
+            <li>"Generate a tech groove snare with ghost notes, medium complexity"</li>
+            <li>"Create a progressive melodic bassline in D minor, 8 bars"</li>
+        </ul>
+
+        <h2>🛠️ Available Tools</h2>
+
+        <p>The MCP server exposes 6 tools that Claude can use:</p>
+
+        <ol>
+            <li><strong>generate_kick_pattern</strong> - Kick drum patterns (5 styles)</li>
+            <li><strong>generate_hihat_pattern</strong> - Hi-hat patterns (6 styles)</li>
+            <li><strong>generate_snare_pattern</strong> - Snare/clap patterns (6 styles)</li>
+            <li><strong>generate_drumkit_pattern</strong> - Complete drum kits (5 genres)</li>
+            <li><strong>generate_bassline_pattern</strong> - Melodic basslines (6 styles, all scales)</li>
+            <li><strong>generate_full_track</strong> - Complete tracks with drums + bassline</li>
+        </ol>
+
+        <p>See <code>mcp-server/README.md</code> for detailed documentation on each tool.</p>
+
+        <h2>💡 Pro Tips</h2>
+
+        <h3>Saving Files</h3>
+        <p>By default, Claude returns MIDI data as base64. To automatically save files, specify a path:</p>
+        <pre>"Generate psytrance drums and save to /Users/me/Music/Ableton/Project/MIDI/drums.mid"</pre>
+
+        <h3>Multiple Variations</h3>
+        <p>Ask Claude to generate multiple versions:</p>
+        <pre>"Generate 3 kick patterns: simple, medium, and complex at 138 BPM"</pre>
+
+        <h3>Arrangement Building</h3>
+        <p>Request full arrangements with multiple sections:</p>
+        <pre>"Create a full trance track with:
+- Intro drums (simple, 4 bars)
+- Verse drums + bassline (medium, 8 bars)
+- Build-up (complex fills, 8 bars)
+- Drop (full energy, 8 bars)
+All at 138 BPM in A minor"</pre>
+
+        <h2>🔧 Troubleshooting</h2>
+
+        <h3>MCP Server Not Connecting</h3>
+        <ul>
+            <li>Check that Node.js is installed: <code>node --version</code></li>
+            <li>Verify the path in <code>claude_desktop_config.json</code> is correct</li>
+            <li>Make sure you ran <code>npm install</code> in the mcp-server directory</li>
+            <li>Restart Claude Desktop after config changes</li>
+        </ul>
+
+        <h3>Claude Doesn't Use the Tools</h3>
+        <ul>
+            <li>Make sure you're using Claude Desktop (not web version)</li>
+            <li>Try being more specific: "Use the trance-machine MCP server to generate..."</li>
+            <li>Check Claude Desktop logs for errors</li>
+        </ul>
+
+        <h3>MIDI Files Not Generating</h3>
+        <ul>
+            <li>If specifying save paths, ensure the directory exists</li>
+            <li>Check file permissions for the output directory</li>
+            <li>Try requesting base64 output instead (default behavior)</li>
+        </ul>
+
+        <h2>📚 More Information</h2>
+
+        <div class="info-box">
+            <p><strong>MCP Server Documentation:</strong> See <code>mcp-server/README.md</code> for complete technical docs</p>
+            <p><strong>Integration Guide:</strong> See <code>INTEGRATION-GUIDE.md</code> for all integration options</p>
+            <p><strong>Pattern Generators:</strong> See <code>README.md</code> for web tool documentation</p>
+        </div>
+
+        <h2>🎉 Ready to Go!</h2>
+
+        <p>Once configured, you can generate professional trance/techno patterns just by talking to Claude!</p>
+
+        <p><strong>Example workflow:</strong></p>
+        <ol>
+            <li>Open Claude Desktop</li>
+            <li>Say: "Generate a full psytrance track at 142 BPM"</li>
+            <li>Claude generates patterns using MCP</li>
+            <li>Import MIDI files to Ableton Live</li>
+            <li>Start producing! 🚀</li>
+        </ol>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="index.html" class="button">← Back to Toolkit</a>
+            <a href="mcp-server/README.md" class="button" target="_blank">MCP Server Docs</a>
+        </div>
+    </div>
+</body>
+</html>

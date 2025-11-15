@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trance Live MIDI Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #FF6B6B;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .midi-status {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .midi-status.connected {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+        }
+
+        .midi-status.error {
+            background: linear-gradient(135deg, #f5576c, #c44569);
+        }
+
+        .midi-select {
+            margin-top: 15px;
+        }
+
+        .midi-select select {
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.9);
+            min-width: 300px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        select, button {
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:hover, select:focus {
+            border-color: #FF6B6B;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-connect {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .button-play {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            font-size: 1.3em;
+        }
+
+        .button-play.playing {
+            background: linear-gradient(135deg, #f5576c, #c44569);
+        }
+
+        .value-display {
+            text-align: center;
+            color: #FF6B6B;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.1);
+            border-color: #FF6B6B;
+        }
+
+        .grid-cell.active {
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+            border-color: #FF6B6B;
+        }
+
+        .grid-cell.playing {
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.8);
+        }
+
+        .grid-cell.accent {
+            border: 3px solid #764ba2;
+        }
+
+        .instrument-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #FF6B6B;
+        }
+
+        .instrument-section h3 {
+            color: #FF6B6B;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #4ECDC4;
+        }
+
+        .info-box h3 {
+            color: #4ECDC4;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .info-box strong {
+            color: #FF6B6B;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f5576c;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #38ef7d;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 Trance Live MIDI Controller</h1>
+        <p class="subtitle">Real-time MIDI to Ableton Live • No file export needed • Web MIDI API</p>
+
+        <div class="midi-status" id="midiStatus">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">Click "Connect MIDI" to start</span>
+            <div class="midi-select" id="midiSelect" style="display: none;">
+                <label style="color: white;">Select MIDI Output: </label>
+                <select id="midiOutputSelect"></select>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="button-connect" onclick="connectMIDI()">🔌 Connect MIDI</button>
+            <div class="control-group">
+                <label for="bpm">BPM: <span id="bpmValue">138</span></label>
+                <input type="range" id="bpm" min="120" max="150" value="138" step="1">
+            </div>
+            <div class="control-group">
+                <label for="channel">MIDI Channel</label>
+                <select id="channel">
+                    <option value="0">Channel 1 (Drums)</option>
+                    <option value="1">Channel 2</option>
+                    <option value="2">Channel 3</option>
+                    <option value="9">Channel 10 (GM Drums)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="instrument-section">
+            <h3>🥁 Kick Pattern</h3>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="kickStyle">Style</label>
+                    <select id="kickStyle" onchange="generateKickPattern()">
+                        <option value="four-floor">4-on-Floor</option>
+                        <option value="rolling">Rolling Bass</option>
+                        <option value="psytrance">Psytrance Power</option>
+                        <option value="offbeat">Offbeat Groove</option>
+                    </select>
+                </div>
+            </div>
+            <div class="pattern-grid" id="kickGrid"></div>
+        </div>
+
+        <div class="instrument-section">
+            <h3>🎩 Hi-Hat Pattern</h3>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="hatStyle">Style</label>
+                    <select id="hatStyle" onchange="generateHatPattern()">
+                        <option value="sixteenths">Classic 16ths</option>
+                        <option value="offbeat">Offbeat</option>
+                        <option value="rolling">Rolling</option>
+                        <option value="psytrance">Psytrance</option>
+                    </select>
+                </div>
+            </div>
+            <div class="pattern-grid" id="hatGrid"></div>
+        </div>
+
+        <div class="instrument-section">
+            <h3>🥁 Snare Pattern</h3>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="snareStyle">Style</label>
+                    <select id="snareStyle" onchange="generateSnarePattern()">
+                        <option value="backbeat">Classic Backbeat</option>
+                        <option value="tech">Tech Groove</option>
+                        <option value="buildup">Build-up Rolls</option>
+                        <option value="minimal">Minimal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="pattern-grid" id="snareGrid"></div>
+        </div>
+
+        <div class="controls">
+            <button class="button-play" id="playBtn" onclick="togglePlayback()" disabled>▶️ Play Pattern (MIDI Live)</button>
+            <button onclick="stopPlayback()">⏹️ Stop</button>
+            <button onclick="clearAllPatterns()">🗑️ Clear All</button>
+        </div>
+
+        <div class="info-box">
+            <h3>📖 How to Use</h3>
+            <p><strong>1. Setup Virtual MIDI:</strong></p>
+            <p>• <strong>Windows:</strong> Install <a href="https://www.tobias-erichsen.de/software/loopmidi.html" target="_blank">loopMIDI</a> (free)</p>
+            <p>• <strong>Mac:</strong> Enable IAC Driver (built-in): Audio MIDI Setup → MIDI Studio → IAC Driver → Enable</p>
+
+            <p style="margin-top: 15px;"><strong>2. Connect Browser to Virtual MIDI:</strong></p>
+            <p>• Click "Connect MIDI" button above</p>
+            <p>• Grant MIDI access permission in browser</p>
+            <p>• Select your virtual MIDI port from dropdown (loopMIDI or IAC Driver)</p>
+
+            <p style="margin-top: 15px;"><strong>3. Configure Ableton Live:</strong></p>
+            <p>• Open Ableton Live → Preferences → Link/Tempo/MIDI</p>
+            <p>• Enable <strong>Track</strong> input for your virtual MIDI port (loopMIDI or IAC Driver)</p>
+            <p>• Create MIDI track, set input to virtual MIDI port</p>
+            <p>• Add Impulse or drum samples</p>
+
+            <p style="margin-top: 15px;"><strong>4. Generate & Play:</strong></p>
+            <p>• Select pattern styles for kick/hat/snare</p>
+            <p>• Click grid cells to customize pattern</p>
+            <p>• Click "Play Pattern" - MIDI sends directly to Ableton!</p>
+            <p>• No file export needed - real-time MIDI streaming!</p>
+
+            <h3 style="margin-top: 20px; color: #f5576c;">⚠️ Requirements</h3>
+            <p>• <strong>Browser:</strong> Chrome or Edge (best Web MIDI support)</p>
+            <p>• <strong>Virtual MIDI driver:</strong> loopMIDI (Windows) or IAC Driver (Mac)</p>
+            <p>• <strong>Ableton Live:</strong> Any version (Intro, Standard, Suite)</p>
+
+            <h3 style="margin-top: 20px; color: #4ECDC4;">🎵 MIDI Mapping</h3>
+            <p>• Kick: <strong>C1 (MIDI 36)</strong></p>
+            <p>• Hi-Hat Closed: <strong>C#1 (MIDI 42)</strong></p>
+            <p>• Hi-Hat Open: <strong>A#1 (MIDI 46)</strong></p>
+            <p>• Snare: <strong>D1 (MIDI 38)</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // MIDI State
+        let midiAccess = null;
+        let midiOutput = null;
+        let isPlaying = false;
+        let schedulerTimer = null;
+        let currentStep = 0;
+
+        // Patterns (16 steps per bar)
+        let kickPattern = Array(16).fill(false);
+        let hatPattern = Array(16).fill(0); // 0=off, 1=closed, 2=open
+        let snarePattern = Array(16).fill(false);
+
+        // MIDI note numbers
+        const KICK_NOTE = 36;  // C1
+        const HAT_CLOSED_NOTE = 42;  // C#1
+        const HAT_OPEN_NOTE = 46;  // A#1
+        const SNARE_NOTE = 38;  // D1
+
+        // UI elements
+        const bpmSlider = document.getElementById('bpm');
+        const bpmValue = document.getElementById('bpmValue');
+        const channelSelect = document.getElementById('channel');
+        const statusText = document.getElementById('statusText');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const midiStatus = document.getElementById('midiStatus');
+        const midiSelect = document.getElementById('midiSelect');
+        const midiOutputSelect = document.getElementById('midiOutputSelect');
+        const playBtn = document.getElementById('playBtn');
+
+        // Update BPM display
+        bpmSlider.addEventListener('input', (e) => {
+            bpmValue.textContent = e.target.value;
+        });
+
+        // Connect to Web MIDI API
+        async function connectMIDI() {
+            try {
+                midiAccess = await navigator.requestMIDIAccess();
+
+                // Populate MIDI outputs
+                const outputs = Array.from(midiAccess.outputs.values());
+
+                if (outputs.length === 0) {
+                    throw new Error('No MIDI outputs found! Please install loopMIDI (Windows) or enable IAC Driver (Mac)');
+                }
+
+                midiOutputSelect.innerHTML = '';
+                outputs.forEach((output, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = output.name;
+                    midiOutputSelect.appendChild(option);
+                });
+
+                // Select first output by default
+                midiOutput = outputs[0];
+
+                midiOutputSelect.addEventListener('change', (e) => {
+                    midiOutput = outputs[e.target.value];
+                    statusText.textContent = `Connected to: ${midiOutput.name}`;
+                });
+
+                midiSelect.style.display = 'block';
+                statusText.textContent = `Connected to: ${midiOutput.name}`;
+                statusIndicator.classList.add('connected');
+                midiStatus.classList.add('connected');
+                playBtn.disabled = false;
+
+            } catch (error) {
+                console.error('MIDI connection error:', error);
+                statusText.textContent = `Error: ${error.message}`;
+                midiStatus.classList.add('error');
+
+                alert('MIDI Connection Failed!\n\n' +
+                      'Make sure you have:\n' +
+                      '• Windows: loopMIDI installed and running\n' +
+                      '• Mac: IAC Driver enabled in Audio MIDI Setup\n' +
+                      '• Chrome or Edge browser (Firefox has limited support)\n\n' +
+                      'Error: ' + error.message);
+            }
+        }
+
+        // Initialize grids
+        function initGrid(gridId, pattern, clickHandler) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                if (i % 4 === 0) cell.classList.add('accent');
+                cell.dataset.step = i;
+                cell.addEventListener('click', () => clickHandler(i));
+                grid.appendChild(cell);
+            }
+
+            updateGrid(gridId, pattern);
+        }
+
+        // Update grid visuals
+        function updateGrid(gridId, pattern) {
+            const grid = document.getElementById(gridId);
+            const cells = grid.querySelectorAll('.grid-cell');
+
+            cells.forEach((cell, i) => {
+                cell.classList.remove('active');
+                if (pattern[i]) {
+                    cell.classList.add('active');
+                }
+            });
+        }
+
+        // Pattern generators
+        function generateKickPattern() {
+            const style = document.getElementById('kickStyle').value;
+            kickPattern.fill(false);
+
+            switch(style) {
+                case 'four-floor':
+                    [0, 4, 8, 12].forEach(i => kickPattern[i] = true);
+                    break;
+                case 'rolling':
+                    for (let i = 0; i < 16; i += 2) kickPattern[i] = true;
+                    break;
+                case 'psytrance':
+                    for (let i = 0; i < 16; i++) kickPattern[i] = true;
+                    break;
+                case 'offbeat':
+                    [2, 6, 10, 14].forEach(i => kickPattern[i] = true);
+                    break;
+            }
+
+            updateGrid('kickGrid', kickPattern);
+        }
+
+        function generateHatPattern() {
+            const style = document.getElementById('hatStyle').value;
+            hatPattern.fill(0);
+
+            switch(style) {
+                case 'sixteenths':
+                    for (let i = 0; i < 16; i++) hatPattern[i] = 1;
+                    [7, 15].forEach(i => hatPattern[i] = 2);
+                    break;
+                case 'offbeat':
+                    [1, 3, 5, 7, 9, 11, 13, 15].forEach(i => hatPattern[i] = 1);
+                    break;
+                case 'rolling':
+                    for (let i = 0; i < 16; i++) hatPattern[i] = 1;
+                    break;
+                case 'psytrance':
+                    for (let i = 0; i < 16; i++) hatPattern[i] = 1;
+                    [3, 7, 11, 15].forEach(i => hatPattern[i] = 2);
+                    break;
+            }
+
+            updateGrid('hatGrid', hatPattern);
+        }
+
+        function generateSnarePattern() {
+            const style = document.getElementById('snareStyle').value;
+            snarePattern.fill(false);
+
+            switch(style) {
+                case 'backbeat':
+                    [4, 12].forEach(i => snarePattern[i] = true);
+                    break;
+                case 'tech':
+                    [4, 10, 12].forEach(i => snarePattern[i] = true);
+                    break;
+                case 'buildup':
+                    for (let i = 8; i < 16; i++) snarePattern[i] = true;
+                    break;
+                case 'minimal':
+                    [4].forEach(i => snarePattern[i] = true);
+                    break;
+            }
+
+            updateGrid('snareGrid', snarePattern);
+        }
+
+        // Grid click handlers
+        function toggleKick(step) {
+            kickPattern[step] = !kickPattern[step];
+            updateGrid('kickGrid', kickPattern);
+        }
+
+        function toggleHat(step) {
+            hatPattern[step] = (hatPattern[step] + 1) % 3;
+            updateGrid('hatGrid', hatPattern);
+        }
+
+        function toggleSnare(step) {
+            snarePattern[step] = !snarePattern[step];
+            updateGrid('snareGrid', snarePattern);
+        }
+
+        function clearAllPatterns() {
+            kickPattern.fill(false);
+            hatPattern.fill(0);
+            snarePattern.fill(false);
+            updateGrid('kickGrid', kickPattern);
+            updateGrid('hatGrid', hatPattern);
+            updateGrid('snareGrid', snarePattern);
+        }
+
+        // MIDI playback
+        function sendMIDI(note, velocity, channel = 0) {
+            if (!midiOutput) return;
+
+            if (velocity > 0) {
+                // Note On
+                midiOutput.send([0x90 + channel, note, velocity]);
+            } else {
+                // Note Off
+                midiOutput.send([0x80 + channel, note, 0]);
+            }
+        }
+
+        function togglePlayback() {
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        }
+
+        function startPlayback() {
+            if (!midiOutput) {
+                alert('Please connect MIDI first!');
+                return;
+            }
+
+            isPlaying = true;
+            playBtn.textContent = '⏸️ Stop';
+            playBtn.classList.add('playing');
+            currentStep = -1;
+
+            const bpm = parseInt(bpmSlider.value);
+            const channel = parseInt(channelSelect.value);
+            const msPerStep = (60000 / bpm) / 4; // 16th notes
+
+            function step() {
+                if (!isPlaying) return;
+
+                // Clear previous playing cells
+                document.querySelectorAll('.grid-cell.playing').forEach(cell => {
+                    cell.classList.remove('playing');
+                });
+
+                currentStep = (currentStep + 1) % 16;
+
+                // Highlight current step
+                const allGrids = ['kickGrid', 'hatGrid', 'snareGrid'];
+                allGrids.forEach(gridId => {
+                    const grid = document.getElementById(gridId);
+                    const cells = grid.querySelectorAll('.grid-cell');
+                    cells[currentStep].classList.add('playing');
+                });
+
+                // Send MIDI
+                if (kickPattern[currentStep]) {
+                    sendMIDI(KICK_NOTE, 127, channel);
+                    setTimeout(() => sendMIDI(KICK_NOTE, 0, channel), msPerStep * 0.8);
+                }
+
+                if (hatPattern[currentStep] === 1) {
+                    sendMIDI(HAT_CLOSED_NOTE, 100, channel);
+                    setTimeout(() => sendMIDI(HAT_CLOSED_NOTE, 0, channel), msPerStep * 0.3);
+                } else if (hatPattern[currentStep] === 2) {
+                    sendMIDI(HAT_OPEN_NOTE, 90, channel);
+                    setTimeout(() => sendMIDI(HAT_OPEN_NOTE, 0, channel), msPerStep * 0.6);
+                }
+
+                if (snarePattern[currentStep]) {
+                    sendMIDI(SNARE_NOTE, 110, channel);
+                    setTimeout(() => sendMIDI(SNARE_NOTE, 0, channel), msPerStep * 0.5);
+                }
+
+                schedulerTimer = setTimeout(step, msPerStep);
+            }
+
+            step();
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            clearTimeout(schedulerTimer);
+            playBtn.textContent = '▶️ Play Pattern (MIDI Live)';
+            playBtn.classList.remove('playing');
+
+            document.querySelectorAll('.grid-cell.playing').forEach(cell => {
+                cell.classList.remove('playing');
+            });
+
+            // Send all notes off
+            const channel = parseInt(channelSelect.value);
+            [KICK_NOTE, HAT_CLOSED_NOTE, HAT_OPEN_NOTE, SNARE_NOTE].forEach(note => {
+                sendMIDI(note, 0, channel);
+            });
+        }
+
+        // Initialize
+        initGrid('kickGrid', kickPattern, toggleKick);
+        initGrid('hatGrid', hatPattern, toggleHat);
+        initGrid('snareGrid', snarePattern, toggleSnare);
+
+        // Generate initial patterns
+        generateKickPattern();
+        generateHatPattern();
+        generateSnarePattern();
+    </script>
+</body>
+</html>
